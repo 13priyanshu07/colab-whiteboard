@@ -1,0 +1,123 @@
+.toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.85);
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+label select {
+  margin-left: 6px;
+  padding: 6px;
+  border-radius: 5px;
+}
+
+
+.tool-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.tool-button {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f5f5f5;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.tool-button:hover {
+  background-color: #e0e0e0;
+}
+
+.tool-button.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+input[type="color"] {
+  margin-left: 4px;
+  cursor: pointer;
+}
+
+input[type="range"] {
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+.action-button {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #999;
+  background-color: #eee;
+  cursor: pointer;
+}
+
+.action-button:hover {
+  background-color: #ddd;
+}
+
+.active-tool {
+  margin-left: auto;
+  font-style: italic;
+  font-size: 14px;
+  color: #555;
+}
+
+.room-container {
+  padding-bottom: 60px; /* to prevent content being hidden under fixed footer */
+  height: 100vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.room-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #2c3e50;
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;           /* Ensures items wrap on small screens */
+  gap: 10px;                 /* Space between elements */
+  z-index: 1000;
+  box-sizing: border-box;   /* Ensures padding is included in width */
+  border-top: 1px solid #1a252f;
+}
+
+
+.room-footer button {
+  padding: 5px 15px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.room-footer button:hover {
+  background: #2980b9;
+}
+
+/* Make sure your canvas takes remaining space */
+.drawing-canvas {
+  flex: 1;
+  width: 100%;
+}

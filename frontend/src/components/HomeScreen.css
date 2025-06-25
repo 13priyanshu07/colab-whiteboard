@@ -1,0 +1,100 @@
+.home-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f5f5f5;
+  position: relative;
+}
+
+.room-selection {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 90%;
+  max-width: 500px;
+}
+
+.room-selection h1 {
+  margin-bottom: 2rem;
+  color: #2c3e50;
+}
+
+.create-room-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.create-room-btn:hover {
+  background: #2980b9;
+}
+
+.join-room {
+  display: flex;
+  gap: 10px;
+}
+
+.join-room input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.join-room-btn {
+  background: #2ecc71;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.join-room-btn:hover {
+  background: #27ae60;
+}
+
+.auth-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #f0f0f0;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  width: 250px; /* optional: fixed width for neatness */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* optional: to match room box */
+}
+
+.auth-container input {
+  display: block;
+  width: 90%;
+  margin: 10px auto;
+  padding: 10px;
+}
+
+.auth-btn {
+  padding: 10px 20px;
+  margin-top: 10px;
+}
+
+.toggle-link {
+  color: blue;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.error-msg {
+  color: red;
+}
