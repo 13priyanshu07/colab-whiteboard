@@ -1,5 +1,6 @@
 // server.js
 const { v4: uuidv4 } = require('uuid');
+const { createCanvas, loadImage } = require('canvas');
 
 const express = require('express');
 const expressWs = require('express-ws');
@@ -163,6 +164,9 @@ app.ws('/whiteboard/:roomId', (ws, req) => {
           room.lastActivity = Date.now();
           
           switch (data.type) {
+            case 'DRAW_START':
+              broadcast(room, ws, data);
+              break;
             case 'DRAW':
               // Optimized drawing data structure
               const drawData = {
@@ -177,7 +181,6 @@ app.ws('/whiteboard/:roomId', (ws, req) => {
                   userId
                 }
               };
-              console.log(drawData);
               broadcast(room, ws, drawData);
               break;
 
@@ -322,13 +325,29 @@ if (!fs.existsSync(saveDir)) {
   fs.mkdirSync(saveDir);
 }
 
-app.post('/save', (req, res) => {
+app.post('/save', async (req, res) => {
   const base64Image = req.body.image.replace(/^data:image\/png;base64,/, '');
+  const imgBuffer = Buffer.from(base64Image, 'base64');
+  
+  // Load the image
+  const img = await loadImage(imgBuffer);
+
+  // Create a canvas
+  const canvas = createCanvas(img.width, img.height);
+  const ctx = canvas.getContext('2d');
+  // Fill with white background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw the original image on top
+  ctx.drawImage(img, 0, 0);
+
   const filePath = path.join(saveDir, 'canvas.png');
-  fs.writeFile(filePath, base64Image, 'base64', (err) => {
-    if (err) return res.status(500).send('Error saving file');
-    res.send('Image saved');
-  });
+  const out = fs.createWriteStream(filePath);
+  const stream = canvas.createPNGStream();
+
+  stream.pipe(out);
+  out.on('finish', () => res.send('Image saved'));
 });
 
 app.get('/load', (req, res) => {

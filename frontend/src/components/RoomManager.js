@@ -49,16 +49,10 @@ const RoomManager = ({ roomId, children }) => {
     }
   }, [roomId]);
 
-  const copyRoomLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    alert('Room link copied to clipboard!');
-  };
-
   return (
     <div className="room-container">
       <div className="room-footer">
         <h3>Room ID: {roomId}</h3>
-        <button onClick={copyRoomLink}>Copy Invite Link</button>
         <span>Users online: {users}</span>
       </div>
       {React.cloneElement(children, { socket, users: users, setUsers })}

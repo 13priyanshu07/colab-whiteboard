@@ -61,6 +61,8 @@ function Whiteboard({ socket, roomId, setUsers }) {
     if (!socket) return;
 
     const handleRemoteDrawing = (data) => {
+      const canvas = canvasRef.current; 
+      const ctx = canvasRef.current.getContext('2d');
       switch(data.type){
         case 'INITIAL_STATE':
           if (data.payload?.roomInfo?.userCount !== undefined) {
@@ -72,27 +74,18 @@ function Whiteboard({ socket, roomId, setUsers }) {
           console.log("👥 Updating user count to:", data.count);
           setUsers(data.count);
           break;
+        case 'DRAW_START':
+          drawFromData(data, ctx);
+          break;
         case 'DRAW':
-          console.log("drawing remotely", data);
-          drawFromData(data.payload, canvasRef.current.getContext('2d')); 
+          drawFromData(data, ctx);
           break;
-        case 'CANVAS_SNAPSHOT': {
-          const img = new Image();
-          img.onload = () => {
-            const ctx = canvasRef.current.getContext('2d');
-            ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-            ctx.drawImage(img, 0, 0);
-          };
-          img.src = data.image;
-          break;
-        }
         case 'UNDO':
-          console.log("Going back");
-          undo(false);
+          console.log("going back");
+          undo(false, canvas);
           break;
         case 'CLEAR_CANVAS':
-          console.log("clearing everything");
-          clearCanvas(false);
+          clearCanvas(false, canvas);
           break;
         default:
           break;
@@ -127,15 +120,18 @@ function Whiteboard({ socket, roomId, setUsers }) {
     }
   };
 
-  const drawFromData = (drawData, ctx) => {
+  const drawFromData = (data, ctx) => {
+    const drawData = data.payload;
     ctx.strokeStyle = drawData.color;
     ctx.lineWidth = drawData.lineWidth;
-    
-    if (drawData.tool === 'pen' || drawData.tool === 'eraser') {
+
+    if (data.type === 'DRAW_START') {
       ctx.beginPath();
       ctx.moveTo(drawData.startPos.x, drawData.startPos.y);
+    }
+    
+    else if (drawData.tool === 'pen' || drawData.tool === 'eraser') {
       ctx.lineTo(drawData.currentPos.x, drawData.currentPos.y);
-      ctx.strokeStyle = drawData.tool === 'eraser' ? '#FFFFFF' : drawData.color;
       ctx.stroke();
     } 
     else if (drawData.tool === 'shape') {
@@ -188,20 +184,92 @@ function Whiteboard({ socket, roomId, setUsers }) {
       context.strokeStyle = tool === 'eraser' ? '#FFFFFF' : color;
       context.lineWidth = lineWidth;
       setIsDrawing(true);
+      // Send path initiation to other clients
+      if (socket) {
+        socket.send({
+          type: 'DRAW_START',
+          payload: {
+            tool,
+            color: tool === 'eraser' ? '#FFFFFF' : color,
+            lineWidth,
+            startPos: { x: offsetX, y: offsetY }
+          }
+        });
+      }
     }
   };
-
 
   const draw = ({ nativeEvent }) => {
     const { offsetX, offsetY } = nativeEvent;
 
     if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const previewCtx = previewCanvasRef.current.getContext('2d');
 
     if (tool === 'shape') {
-      const ctx = previewCanvasRef.current.getContext('2d');
-      ctx.clearRect(0, 0, previewCanvasRef.current.width, previewCanvasRef.current.height);
+      previewCtx.clearRect(0, 0, previewCanvasRef.current.width, previewCanvasRef.current.height);
 
       const { x, y } = startPos;
+      previewCtx.strokeStyle = color;
+      previewCtx.lineWidth = lineWidth;
+
+      if (shape === 'rectangle') {
+        previewCtx.strokeRect(x, y, offsetX - x, offsetY - y);
+      } else if (shape === 'circle') {
+        const radius = Math.sqrt((offsetX - x) ** 2 + (offsetY - y) ** 2);
+        previewCtx.beginPath();
+        previewCtx.arc(x, y, radius, 0, 2 * Math.PI);
+        previewCtx.stroke();
+      } else if (shape === 'line') {
+        previewCtx.beginPath();
+        previewCtx.moveTo(x, y);
+        previewCtx.lineTo(offsetX, offsetY);
+        previewCtx.stroke();
+      } else if (shape === 'triangle') {
+        previewCtx.beginPath();
+        previewCtx.moveTo(x, y);
+        previewCtx.lineTo(offsetX, offsetY);
+        previewCtx.lineTo(x - (offsetX - x), offsetY);
+        previewCtx.closePath();
+        previewCtx.stroke();
+      }
+
+    } else {
+      ctx.lineTo(offsetX, offsetY);
+      ctx.strokeStyle = tool === 'eraser' ? '#FFFFFF' : color;
+      ctx.lineWidth = lineWidth;
+      ctx.stroke();
+
+      // Send incremental drawing data
+      if (socket) {
+        console.log("drawing");
+        socket.send({
+          type: 'DRAW',
+          payload: {
+            tool,
+            color: tool === 'eraser' ? '#FFFFFF' : color,
+            lineWidth,
+            currentPos: { x: offsetX, y: offsetY }
+          }
+        });
+      }
+    }
+  };
+
+  const stopDrawing = ({ nativeEvent }) => {
+    if (!isDrawing) return;
+    setIsDrawing(false);
+
+    const { offsetX, offsetY } = nativeEvent;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const { x, y } = startPos;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+
+    if (tool === 'shape') {
       ctx.strokeStyle = color;
       ctx.lineWidth = lineWidth;
 
@@ -225,61 +293,6 @@ function Whiteboard({ socket, roomId, setUsers }) {
         ctx.closePath();
         ctx.stroke();
       }
-
-    } else {
-  
-      const context = canvasRef.current.getContext('2d');
-      context.lineTo(offsetX, offsetY);
-      context.strokeStyle = tool === 'eraser' ? '#FFFFFF' : color;
-      context.lineWidth = lineWidth;
-      context.stroke();
-    }
-  };
-
-  const stopDrawing = ({ nativeEvent }) => {
-    if (!isDrawing) return;
-    setIsDrawing(false);
-
-    const { offsetX, offsetY } = nativeEvent;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const { x, y } = startPos;
-
-    ctx.strokeStyle = color;
-    ctx.lineWidth = lineWidth;
-    console.log(tool);
-    if(tool === 'pen' || tool === 'eraser'){
-      if (socket) {
-        const png = canvasRef.current.toDataURL('image/png');
-        socket.send({ type: 'CANVAS_SNAPSHOT', image: png });
-      }
-    }else{
-      if (tool === 'shape') {
-        ctx.strokeStyle = color;
-        ctx.lineWidth = lineWidth;
-
-        if (shape === 'rectangle') {
-          ctx.strokeRect(x, y, offsetX - x, offsetY - y);
-        } else if (shape === 'circle') {
-          const radius = Math.sqrt((offsetX - x) ** 2 + (offsetY - y) ** 2);
-          ctx.beginPath();
-          ctx.arc(x, y, radius, 0, 2 * Math.PI);
-          ctx.stroke();
-        } else if (shape === 'line') {
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.lineTo(offsetX, offsetY);
-          ctx.stroke();
-        } else if (shape === 'triangle') {
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.lineTo(offsetX, offsetY);
-          ctx.lineTo(x - (offsetX - x), offsetY);
-          ctx.closePath();
-          ctx.stroke();
-        }
-      }
- 
       if (socket) {
         socket.sendDrawAction({
           tool: tool,
@@ -291,8 +304,6 @@ function Whiteboard({ socket, roomId, setUsers }) {
         });
       }
     }
-
-    
 
     previewCanvasRef.current.getContext('2d').clearRect(
       0, 0,
@@ -333,8 +344,7 @@ function Whiteboard({ socket, roomId, setUsers }) {
     img.src = URL.createObjectURL(blob);
   };
 
-  const clearCanvas = (shouldBroadcast = true) => {
-    const canvas = canvasRef.current;
+  const clearCanvas = (shouldBroadcast = true, canvas=canvasRef.current) => {
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
     if (shouldBroadcast && socket) {
@@ -342,10 +352,9 @@ function Whiteboard({ socket, roomId, setUsers }) {
     }
   };
 
-  const undo = (shouldBroadcast = true) => {
+  const undo = (shouldBroadcast = true, canvas=canvasRef.current) => {
     if (history.length === 0) return;
     const imgData = history[history.length - 2];
-    const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
     const image = new Image();
     image.onload = () => {

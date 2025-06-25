@@ -1,8 +1,22 @@
 // routes/rooms.js
 const express = require('express');
+const mongoose = require('mongoose');
 const Room = require('../models/Room');
 const auth = require('../middleware/authMiddleware');
 const router = express.Router();
+
+// Get all rooms for a user
+router.get('/:id/canvas', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const room = await Room.findById(id);
+    if (!room) return res.status(404).json({ error: 'Room not found' });
+
+    res.json({ canvasState: room.canvasState });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Create a room
 router.post('/', auth, async (req, res) => {
@@ -28,16 +42,39 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// Get all rooms for a user
-router.get('/:id/canvas', auth, async (req, res) => {
+// Check if room exists
+router.get('/:id/exists', async (req, res) => {
   try {
     const { id } = req.params;
-    const room = await Room.findById(id);
-    if (!room) return res.status(404).json({ error: 'Room not found' });
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      return res.status(400).json({ 
+        exists: false, 
+        error: 'Valid room ID (non-empty string) is required' 
+      });
+    }
 
-    res.json({ canvasState: room.canvasState });
+    const trimmedId = id.trim();
+    const room = await Room.findById(trimmedId).select('_id owner').lean();
+
+    if (!room) {
+      return res.json({ 
+        exists: false,
+        message: 'Room not found'
+      });
+    }
+
+    res.json({
+      exists: true,
+      room: {
+        id: room._id,
+        ownerId: room.owner,
+        isOwner: req.user?.id === room.owner.toString()
+      }
+    });
+    
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error checking room existence:', err);
+    res.status(500).json({ exists: false, error: 'Server error checking room existence' });
   }
 });
 

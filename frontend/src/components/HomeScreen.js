@@ -11,7 +11,7 @@ function HomeScreen() {
   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [username, setUsername] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('token'));
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -116,10 +116,25 @@ function HomeScreen() {
   };
 
 
-  const joinRoom = () => {
+  const joinRoom = async () => {
     if (!localStorage.getItem('token')) return alert('Please login first.');
-    if (roomId.trim()) {
-      navigate(`/room/${roomId.trim()}`);
+    const trimmedRoomId = roomId.trim();
+    if (!trimmedRoomId) return alert('Please enter a room ID');
+
+    try {
+      // First check if room exists
+      const existsRes = await fetch(`http://localhost:5000/api/rooms/${trimmedRoomId}/exists`);
+      const existsData = await existsRes.json();
+      
+      if (!existsData.exists) {
+        return alert('Room does not exist. Please check the ID or create a new room.');
+      }
+
+      // Room exists, proceed to join
+      navigate(`/room/${trimmedRoomId}`);
+    }catch (err) {
+      console.error('Error checking room existence:', err);
+      alert('Failed to verify room. Please try again.');
     }
   };
 
