@@ -38,7 +38,7 @@ function Whiteboard({ socket, roomId, setUsers }) {
     context.lineJoin = 'round';
 
     const handleResize = () => {
-      const oldData = canvas.toDataURL(); // Capture current drawing
+      const oldData = canvas.toDataURL(); 
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
 
@@ -227,7 +227,7 @@ function Whiteboard({ socket, roomId, setUsers }) {
       }
 
     } else {
-      // Handle pen or eraser freehand drawing
+  
       const context = canvasRef.current.getContext('2d');
       context.lineTo(offsetX, offsetY);
       context.strokeStyle = tool === 'eraser' ? '#FFFFFF' : color;
@@ -279,11 +279,11 @@ function Whiteboard({ socket, roomId, setUsers }) {
           ctx.stroke();
         }
       }
-      // Send shape data to server (once for all shapes)
+ 
       if (socket) {
         socket.sendDrawAction({
           tool: tool,
-          shape: shape, // This will be 'rectangle', 'circle', etc.
+          shape: shape, 
           color: color,
           lineWidth: lineWidth,
           startPos: { x, y },
@@ -365,7 +365,7 @@ function Whiteboard({ socket, roomId, setUsers }) {
     } else if (tool === 'eraser') {
       return `url(${eraserCursor}) 4 28, auto`;
     } else {
-      return 'crosshair'; // or use a shapesCursor image
+      return 'crosshair'; 
     }
   };
 

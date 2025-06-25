@@ -58,7 +58,7 @@ function HomeScreen() {
       if (!res.ok) throw new Error(data.error || 'Authentication failed');
 
       localStorage.setItem('token', data.token);
-      // Decode token to get username (optional depending on your token payload)
+   
       try {
         setIsLoggedIn(true);
         fetch(`${API_BASE_URL}/me`, {

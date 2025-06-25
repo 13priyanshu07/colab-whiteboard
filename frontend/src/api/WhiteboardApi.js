@@ -47,7 +47,7 @@ export const saveCanvasToDB = async (roomId, canvasData) => {
       body: JSON.stringify({ canvasState: canvasData })
     });
 
-    if (response.ok) return await response.json(); // Success
+    if (response.ok) return await response.json(); 
 
     const errorData = await response.json();
 
@@ -64,8 +64,8 @@ export const saveCanvasToDB = async (roomId, canvasData) => {
         },
         body: JSON.stringify({ 
           _id: roomId,
-          canvasState: canvasData // Include initial canvas data
-        }) // Your backend expects "roomId"
+          canvasState: canvasData 
+        }) 
       });
 
       if (!createRoomRes.ok) {
@@ -73,7 +73,7 @@ export const saveCanvasToDB = async (roomId, canvasData) => {
         throw new Error(createErr.error || 'Room creation failed');
       }
 
-      return; // Return final result
+      return; 
     }
     // Other errors (not 404)
     throw new Error(errorData.message || 'Failed to save canvas');
