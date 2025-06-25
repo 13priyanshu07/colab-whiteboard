@@ -1,4 +1,4 @@
-# Realtime Whiteboard
+# Colab Whiteboard
 
 A real-time collaborative whiteboard app with drawing tools, shape support, undo/clear sync, and live user tracking — built using React, Node.js, WebSockets, and MongoDB.
 
@@ -13,9 +13,20 @@ A real-time collaborative whiteboard app with drawing tools, shape support, undo
 
 ## Tech Stack
 
-- **Frontend:** React, WebSockets
-- **Backend:** Express.js, Node.js, MongoDB
-- **Database:** MongoDB (stores room metadata and canvas state)
+**Frontend:**
+- React
+- React Router
+- React Toastify
+
+**Backend:**
+- Node.js
+- Express
+- Express-WS (WebSockets)
+- MongoDB (Mongoose)
+- JWT Authentication
+- BcryptJS for password hashing
+- Canvas for image processing
+- UUID for unique identifiers
 
 ## Getting Started
 
@@ -26,8 +37,15 @@ A real-time collaborative whiteboard app with drawing tools, shape support, undo
 
 ### Setup
 
-#### 1. Clone the repo
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/13priyanshu07/colab-whiteboard.git
+2. Open the terminal and write:
+   ```bash
+   cd backend
+   node server.js
+3. Now open another terminal and write:
+   ```bash
+   cd frontend
+   npm start
 
-```bash
-git clone https://github.com/your-username/realtime-whiteboard.git
-cd realtime-whiteboard
