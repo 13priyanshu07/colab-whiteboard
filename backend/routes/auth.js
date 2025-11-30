@@ -56,7 +56,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// routes/auth.js or similar
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('username email');
